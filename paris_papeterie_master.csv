@@ -1,0 +1,37 @@
+店名,住所,電話番号,ウェブサイト,メールアドレス,評価,特徴,件名,本文,ステータス
+L'Ecritoire Paris,"26 Pass. Molière, 75003 Paris",,https://www.lecritoireparis.com/,,4.8,ノート・ペン・封蝋など高評価の文具店,,,要確認(send_log.csv参照)
+Papier Tigre,"5 Rue des Filles du Calvaire, 75003 Paris",+33 1 48 04 00 21,http://www.papiertigre.fr/,,4.6,仏ブランドのノートメーカー(競合寄り),,,未送信
+Papeterie du Dôme,"108 Bd du Montparnasse, 75014 Paris",+33 1 43 35 25 74,https://www.papeteriedudome.fr/,,4.4,ペン・アジェンダ中心の老舗文具店,,,未送信
+Rougier & Plé (Filles du Calvaire),"15 Bd des Filles du Calvaire, 75003 Paris",+33 1 44 54 81 00,https://www.rougier-ple.fr/,,4.2,大型画材・文具チェーン,,,未送信
+Rougier & Plé (Saint-Germain),"108 Bd Saint-Germain, 75006 Paris",+33 1 56 81 18 35,https://www.rougier-ple.fr/,,4.3,大型画材・文具チェーン,,,未送信
+Rougier & Plé (Italie 2),"30 Av. d'Italie, 75013 Paris",+33 1 40 01 15 72,https://www.rougier-ple.fr/,,3.7,大型画材・文具チェーン,,,未送信
+Rougier & Plé (Lecourbe),"157 Rue Lecourbe, 75015 Paris",+33 1 42 50 45 49,https://www.rougier-ple.fr/,,4.2,大型画材・文具チェーン,,,未送信
+Le Carré d'Encre,"13bis Rue des Mathurins, 75009 Paris",+33 1 42 93 86 84,http://www.lecarredencre.fr/,,4.6,高級筆記具・カリグラフィー用品専門,,,未送信
+Les P'tits Papiers Paris,"15 Rue Soufflot, 75005 Paris",+33 1 56 81 02 41,https://www.lesptitspapiers.com/,,4.8,ノート・カード中心のギフト系文具店,,,未送信
+Papeterie Montparnasse,"41 Rue du Montparnasse, 75014 Paris",+33 1 40 47 57 12,http://www.papeteriemontparnasse.fr/,,4.7,独立系ペーパー・ペン専門店,,,未送信
+Papeterie du textile,"61-63 Rue Réaumur, 75002 Paris",+33 1 42 36 37 52,,,4.7,業務用も扱う総合文具店,,,未送信
+Junku,"18 Rue des Pyramides, 75001 Paris",+33 1 42 60 89 12,https://sites.google.com/junku.fr/librairiejunkuparis/accueil,,4.7,日本書店だが文具・書道用品も充実,,,未送信
+Mark's Style Tokyo,"6 Rue du Trésor, 75004 Paris",+33 1 43 56 81 46,https://markstyletokyo.fr/,,4.6,日本ブランドMark'sの直営に近い店,,,未送信
+Ijii Papeterie,"25 Rue Faidherbe, 75011 Paris",+33 1 40 56 92 56,https://ijiipapeterie.com/,,4.3,日本ブランド専門・Traveler's Company取扱店,,,未送信
+MiSAKi iiNUMA,"82 rue Quincampoix, 75003 Paris",+33 1 73 75 45 96,https://www.misakiiinuma.com/,,5.0,和紙・手漉き紙専門,,,未送信
+Adeline KLAM,"54 Bd Richard-Lenoir, 75011 Paris",+33 1 48 07 20 88,https://adelineklam.com/,,4.8,和紙・折り紙専門(日本製品との親和性高),,,未送信
+Papeterie de l'École Militaire,"41 Av. de la Motte-Picquet, 75007 Paris",+33 1 45 51 24 98,http://www.parispapeterie.com/,,4.6,万年筆・インク中心の専門文具店,,フォームのみ,未送信
+Grim'art,"59-61 Rue Saint-André des Arts, 75006 Paris",+33 1 46 33 19 88,https://www.grimartparis.com/,,4.2,革製手帳・ノート専門の職人系文具店,,,未送信
+Petit Gramme Paris,"22 Rue Milton, 75009 Paris",+33 9 88 30 72 28,https://petitgramme.fr/,,4.9,イラスト系カード・ノートのデザイナーズ文具店,,フォームのみ,未送信
+Plume et Bille,"38 Rue de l'Arcade, 75008 Paris",+33 1 42 65 57 92,https://plumeetbille.com/,,4.6,高級万年筆(Namiki等)専門店,,,未送信
+Lavrut,"52 Pass. Choiseul, 75002 Paris",+33 1 42 96 95 54,http://www.lavrut.com/,,4.7,老舗画材・文具店,,,未送信
+Magasin Sennelier,"3 Quai Voltaire, 75007 Paris",+33 1 42 60 72 15,http://magasinsennelier.art/,,4.7,老舗画材店(文具も一部あり),,,未送信
+Papeterie COPY6,"3 Rue du Montparnasse, 75006 Paris",+33 1 45 44 66 11,,,4.9,地域密着型の文具・印刷店(サイト未確認),,,未送信
+La Papétheque,"26 Rue Soufflot, 75005 Paris",+33 1 43 54 14 89,,,4.4,万年筆・ノート中心の小規模専門店,,,未送信
+Calligrane,"6 Rue du Pont Louis-Philippe, 75004 Paris",+33 1 48 04 09 00,,,4.7,手漉き紙・アート系ペーパー専門店,,,未送信
+MAJUSCULE,"61 Rue du Faubourg Montmartre, 75009 Paris",+33 1 42 80 39 80,,,4.0,大型文具・子供向けギフト店,,,未送信
+Papeterie Perjac,"66 Rue du Faubourg Poissonnière, 75010 Paris",+33 1 47 70 28 71,,,4.6,Paper Republic取扱の人気文具店,,,未送信
+Le bruit du papier,"27 Rue Marguerite de Rochechouart, 75009 Paris",+33 1 53 21 04 68,,,4.2,カード・ギフト系の地域密着型文具店,,,未送信
+PapiersPicard,"39 Rue du Faubourg Poissonnière, 75009 Paris",+33 1 47 70 26 17,,,3.1,画材・文具店(評価低め・接客に懸念あり),,,未送信
+Mélodies Graphiques,"10 Rue du Pont Louis-Philippe, 75004 Paris",+33 1 42 74 57 68,,,4.2,カリグラフィー・アートペーパー専門店,,,未送信
+PLEIN CIEL - ARAGO,"28 Bd Arago, 75013 Paris",+33 1 47 07 50 75,,,4.2,文具・画材の複合店,,,未送信
+MEMOIRE VIVE Papeterie,"168 Rue de la Convention, 75015 Paris",+33 9 81 39 22 78,,,4.0,地域密着の文具・印刷店,,,未送信
+Librairie Lamartine,"118 Rue de la Pompe, 75016 Paris",+33 1 47 27 31 31,,,4.1,書店兼文具店(16区の高級住宅街),,,未送信
+Papeterie Le Bureau De L'Etoile,"5 Av. Mac-Mahon, 75017 Paris",+33 1 43 80 84 17,,,4.0,文具・印刷サービス店,,,未送信
+Papier Royal,"146 Gal de Valois, 75001 Paris",+33 1 40 15 93 20,,,4.3,高級ギフト・パーソナライズ文具店,,,未送信
+Librairie J Aude,"35 Av. Mozart, 75016 Paris",+33 1 42 88 08 61,,,4.3,書店兼文具店(16区),,,未送信
