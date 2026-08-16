@@ -20,6 +20,7 @@ jepra run --country DE --city Berlin --category gift --limit 100 --out berlin.cs
 | 連絡先発掘 | `enrich` | サイトを巡回してメールアドレスを抽出、無ければフォームURLを記録 |
 | 文面生成 | `compose` | FR/EN/JA × A/B の2枝を自動割り当て |
 | 記録 | `log` | 送信・バウンス・開封・返信・商談・成約 |
+| 追客 | `inbox` / `followup` | 対応待ちの抽出と、反応のないリードへの追客文面生成 |
 | 測定 | `stats` | 到達率・返信率・商談化率、都市/業種/文面枝ごとの内訳とA/B検定 |
 | 納品 | `export` | 日本語ヘッダのCSV（Excelでそのまま開ける） |
 
@@ -91,7 +92,21 @@ jepra log meeting --lead 42
 jepra import-events results.csv      # 列: リードID/店名, 種別, 日時, 文面枝
 ```
 
-### 4. 測る
+### 4. 追いかける
+
+返信は放っておくと埋もれ、無反応は忘れられる。どちらも商談数に直結するので、
+勘ではなくクエリで拾う。
+
+```bash
+jepra inbox                  # 「返信あり・未対応」と「追客推奨」を一覧
+jepra followup --days 7      # 初回送信から7日反応がないリードに追客文面を生成
+```
+
+追客の文面枝（A/B）は初回送信から引き継ぐ。ここで枝を変えると、返信がどちらの
+文面によるものか分からなくなり、A/Bの集計が壊れる。返信・バウンス・配信停止の
+あったリードは追客対象から自動で外れる。
+
+### 5. 測る
 
 ```bash
 jepra stats                  # 全体のファネル
@@ -124,7 +139,7 @@ jepra stats --json           # 機械可読
 返信率の分母を送信ではなく到達にしているのは、届いていない宛先を分母に入れると
 文面の良し悪しが測れなくなるため。
 
-### 既存のCSVを取り込む
+### 6. 既存のCSVを取り込む
 
 ```bash
 jepra import-csv data/legacy/papeterie_nationwide.csv
@@ -166,7 +181,7 @@ Wix や sites.google.com のような共有ドメインもある。ドメイン�
 ## 開発
 
 ```bash
-python3 -m unittest discover -s tests    # 66 tests
+python3 -m unittest discover -s tests    # 77 tests
 ```
 
 ```

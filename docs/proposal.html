@@ -1,0 +1,815 @@
+<title>越境BtoB 販路開拓プラン</title>
+
+<style>
+  /* --------------------------------------------------------------------
+     設計方針
+     見出しは明朝、本文はゴシック — 日本の正式なビジネス文書の組み方に倣う。
+     数値の信頼性が売り物のサービスなので、罫線は細く、数字は等幅で桁を揃える。
+     アクセントは台帳インクを意識した深い緑一色に絞り、灰色もその緑側に寄せる。
+     -------------------------------------------------------------------- */
+
+  :root {
+    --ground: #F1F4F3;
+    --surface: #FCFDFC;
+    --surface-sunk: #E9EEEC;
+    --ink: #16211F;
+    --ink-soft: #566661;
+    --ink-faint: #869490;
+    --rule: #D2DAD7;
+    --rule-strong: #B4C0BC;
+    --accent: #0F4C45;
+    --accent-soft: #E1EBE8;
+    --warn: #7E5310;
+    --warn-soft: #F3EADB;
+
+    --font-display: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "Noto Serif JP", "Songti SC", serif;
+    --font-body: "Hiragino Kaku Gothic ProN", "Yu Gothic", YuGothic, "Noto Sans JP", system-ui, sans-serif;
+    --font-data: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --measure: 60ch;
+    --page: 62rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1513;
+      --surface: #151D1B;
+      --surface-sunk: #1B2523;
+      --ink: #E5EDEA;
+      --ink-soft: #97A6A1;
+      --ink-faint: #6B7A75;
+      --rule: #27332F;
+      --rule-strong: #3A4A45;
+      --accent: #6FBFAE;
+      --accent-soft: #17302B;
+      --warn: #D6A75E;
+      --warn-soft: #2A2317;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0E1513;
+    --surface: #151D1B;
+    --surface-sunk: #1B2523;
+    --ink: #E5EDEA;
+    --ink-soft: #97A6A1;
+    --ink-faint: #6B7A75;
+    --rule: #27332F;
+    --rule-strong: #3A4A45;
+    --accent: #6FBFAE;
+    --accent-soft: #17302B;
+    --warn: #D6A75E;
+    --warn-soft: #2A2317;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "palt" 1;
+  }
+
+  .page {
+    max-width: var(--page);
+    margin: 0 auto;
+    padding: clamp(2rem, 6vw, 5rem) clamp(1.15rem, 5vw, 3.5rem) 5rem;
+  }
+
+  /* ---------- 表紙 ---------- */
+
+  .cover {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2.75rem;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .cover h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5.5vw, 3.1rem);
+    line-height: 1.28;
+    font-weight: 600;
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: 0.01em;
+  }
+
+  .lede {
+    max-width: var(--measure);
+    color: var(--ink-soft);
+    font-size: 1.02rem;
+    margin: 0;
+  }
+
+  .cover-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 2.25rem;
+    font-family: var(--font-data);
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- 注記 ---------- */
+
+  .notice {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2.25rem;
+    padding: 1.15rem 1.35rem;
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    color: var(--ink);
+  }
+
+  .notice p { margin: 0; font-size: 0.9rem; max-width: var(--measure); }
+  .notice strong { color: var(--warn); }
+
+  .notice-mark {
+    font-family: var(--font-data);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--warn);
+    white-space: nowrap;
+    padding-top: 0.28rem;
+  }
+
+  /* ---------- 章立て ---------- */
+
+  section { margin-top: 4.25rem; }
+
+  .sec-head {
+    display: grid;
+    grid-template-columns: 3.25rem 1fr;
+    align-items: baseline;
+    gap: 0 0.75rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule-strong);
+    margin-bottom: 1.75rem;
+  }
+
+  .sec-num {
+    font-family: var(--font-data);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sec-head h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.4;
+    text-wrap: balance;
+  }
+
+  .sec-body { display: flex; flex-direction: column; gap: 1.35rem; }
+  .sec-body > p { margin: 0; max-width: var(--measure); }
+  .sec-body > p.wide { max-width: none; }
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 1.08rem;
+    font-weight: 600;
+    margin: 0 0 0.15rem;
+    line-height: 1.5;
+  }
+
+  a { color: var(--accent); }
+  a:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ul.plain {
+    margin: 0;
+    padding-left: 1.15rem;
+    max-width: var(--measure);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  ul.plain li::marker { color: var(--accent); }
+
+  /* ---------- プラン ---------- */
+
+  .plans { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .plan {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--accent);
+    padding: 1.6rem clamp(1.1rem, 3vw, 1.9rem) 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+  }
+
+  .plan.is-trial { border-top-color: var(--rule-strong); }
+
+  .plan-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.4rem 1.5rem;
+  }
+
+  .plan-name {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .plan-price {
+    font-family: var(--font-data);
+    font-size: 0.92rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+  .plan-price b { color: var(--ink); font-size: 1.12rem; font-weight: 700; }
+
+  .plan > p { margin: 0; max-width: var(--measure); color: var(--ink-soft); font-size: 0.95rem; }
+
+  .kpi {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    align-self: flex-start;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 0.45rem 0.9rem;
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
+  .kpi span {
+    font-family: var(--font-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+
+  /* ---------- 表 ---------- */
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    min-width: 30rem;
+  }
+
+  caption {
+    caption-side: top;
+    text-align: left;
+    font-family: var(--font-data);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-bottom: 0.6rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.8rem 1.05rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    line-height: 1.7;
+  }
+
+  thead th {
+    font-size: 0.76rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    font-weight: 700;
+    background: var(--surface-sunk);
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.num, th.num {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  th[scope="row"] { font-weight: 600; white-space: nowrap; }
+
+  tr.is-highlight td, tr.is-highlight th { background: var(--accent-soft); }
+
+  /* ---------- 進め方 ---------- */
+
+  .timeline {
+    display: grid;
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+
+  .step {
+    background: var(--surface);
+    padding: 1.15rem 1.35rem;
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 0.25rem 1rem;
+    align-items: baseline;
+  }
+
+  .step-week {
+    font-family: var(--font-data);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .step p { margin: 0; font-size: 0.94rem; }
+
+  /* ---------- レポート見本 ---------- */
+
+  .report {
+    background: var(--surface-sunk);
+    border: 1px solid var(--rule);
+    padding: 1.4rem clamp(1rem, 3vw, 1.6rem);
+    overflow-x: auto;
+  }
+
+  .report pre {
+    margin: 0;
+    font-family: var(--font-data);
+    font-size: 0.82rem;
+    line-height: 1.95;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+
+  .report-caption {
+    margin: 0.85rem 0 0;
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+  }
+
+  .defs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin: 0;
+    padding: 1.3rem 1.5rem;
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+  }
+  .defs div { display: flex; flex-direction: column; gap: 0.1rem; }
+  .defs dt { font-weight: 700; font-size: 0.92rem; }
+  .defs dd {
+    margin: 0;
+    font-family: var(--font-data);
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .defs dd.note {
+    font-family: var(--font-body);
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+  }
+
+  /* ---------- 対応範囲外 ---------- */
+
+  .exclusions {
+    background: var(--surface);
+    border: 2px solid var(--ink);
+    padding: 1.6rem clamp(1.1rem, 3vw, 1.9rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  .exclusions ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .exclusions li {
+    display: grid;
+    grid-template-columns: 1.4rem 1fr;
+    gap: 0.6rem;
+    align-items: baseline;
+    font-size: 0.95rem;
+  }
+
+  .exclusions li::before {
+    content: "×";
+    font-family: var(--font-data);
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+
+  /* ---------- 署名 ---------- */
+
+  .sign {
+    margin-top: 4.5rem;
+    padding-top: 1.75rem;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    font-family: var(--font-data);
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.03em;
+  }
+  .sign strong { color: var(--ink); font-size: 0.95rem; }
+  .sign div { display: flex; flex-direction: column; gap: 0.3rem; }
+
+  .fill {
+    background: var(--warn-soft);
+    color: var(--warn);
+    padding: 0 0.25em;
+    font-weight: 700;
+    border-bottom: 1px dashed var(--warn);
+  }
+
+  @media (max-width: 34rem) {
+    .sec-head { grid-template-columns: 1fr; gap: 0.35rem; }
+    .step { grid-template-columns: 1fr; gap: 0.2rem; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="cover">
+    <p class="eyebrow">ご提案</p>
+    <h1>越境BtoB 販路開拓のご支援<br>現地小売へのリード獲得と商談創出</h1>
+    <p class="lede">
+      海外の現地小売店リストの構築から、現地語での初回接触、商談の設定までを代行します。
+      すべての工程を数値でご報告し、指標の定義は契約期間中変更しません。
+    </p>
+    <div class="cover-meta">
+      <span>対象：海外販路を検討中の日本のメーカー・ブランド</span>
+      <span>初期実施国：フランス</span>
+    </div>
+  </header>
+
+  <div class="notice">
+    <span class="notice-mark">記入要</span>
+    <p>
+      <strong>本書はテンプレートです。</strong>
+      <span class="fill">〈 〉</span> の箇所を案件ごとに書き換えてください。
+      第4章の数値は書式の例であり、実績値ではありません。自社の実績が出るまでは
+      実績として提示しないでください。
+    </p>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2>ご提案の背景</h2>
+    </div>
+    <div class="sec-body">
+      <p>
+        海外に売れる商品を持ちながら販路開拓が進まない理由は、商品力ではなく
+        <strong>初期接触のコスト</strong>にあります。
+      </p>
+      <ul class="plain">
+        <li>現地の小売店リストが手に入らない。展示会名簿は古く、商社経由では取引先を選べない</li>
+        <li>店舗名は分かってもメールアドレスが分からない。多くの独立系店舗は問い合わせフォームしか公開していない</li>
+        <li>現地語で書けない。書いても反応がない</li>
+        <li>何通出して何件返ってきたのかが残らないため、改善の手がかりがない</li>
+      </ul>
+      <p>
+        <span class="fill">〈自社名〉</span>は、この<strong>リスト構築から初回接触までの工程</strong>を代行し、
+        結果をすべて数値でご報告します。
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2>サービス内容</h2>
+    </div>
+    <div class="sec-body">
+      <div class="plans">
+
+        <article class="plan">
+          <div class="plan-top">
+            <h3 class="plan-name">プラン A — リード獲得</h3>
+            <p class="plan-price">初期 <b>15万円</b> ／ 月額 <b>8万円</b></p>
+          </div>
+          <p>現地小売リストの構築と、現地語でのアプローチ配信までを担当します。</p>
+          <div class="table-wrap">
+            <table>
+              <tbody>
+                <tr><th scope="row">ターゲット設計</th><td>対象国・都市・業種の選定、優先度の基準づくり</td></tr>
+                <tr><th scope="row">リスト構築</th><td>店舗情報の収集、重複排除、Google評価による優先度付け</td></tr>
+                <tr><th scope="row">連絡先の特定</th><td>各店サイトを巡回してメールアドレスを特定。フォームのみの店は別リストへ分けます</td></tr>
+                <tr><th scope="row">文面作成</th><td>現地語で2パターン作成し、半数ずつ配信して反応を比較します</td></tr>
+                <tr><th scope="row">配信</th><td>月300〜500通（初月は200通から開始）</td></tr>
+                <tr><th scope="row">追客</th><td>7日間反応のない先へ1回のみフォロー</td></tr>
+                <tr><th scope="row">月次レポート</th><td>到達率・返信率・都市別の内訳・文面別の比較</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="kpi"><span>報告KPI</span>到達数・返信数</p>
+        </article>
+
+        <article class="plan">
+          <div class="plan-top">
+            <h3 class="plan-name">プラン B — 商談創出</h3>
+            <p class="plan-price">初期 <b>20万円</b> ／ 月額 <b>20万円</b></p>
+          </div>
+          <p>プランAに加えて、返信への対応と商談設定までを担当します。</p>
+          <div class="table-wrap">
+            <table>
+              <tbody>
+                <tr><th scope="row">返信対応</th><td>現地語での一次返信、質問への回答、資料送付</td></tr>
+                <tr><th scope="row">見込み判定</th><td>前向き・条件付き・見送りに仕分け、理由を記録します</td></tr>
+                <tr><th scope="row">商談設定</th><td>日程調整、オンライン会議の設定、通訳の手配（別途実費）</td></tr>
+                <tr><th scope="row">引き渡し</th><td>商談前に、相手先の情報・関心事・経緯をまとめてお渡しします</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="kpi"><span>報告KPI</span>商談数</p>
+          <p>成果報酬型（月額10万円 ＋ 商談1件あたり2.5万円）へのご変更も可能です。</p>
+        </article>
+
+        <article class="plan is-trial">
+          <div class="plan-top">
+            <h3 class="plan-name">トライアル</h3>
+            <p class="plan-price"><b>10万円</b> ／ 1ヶ月</p>
+          </div>
+          <p>
+            1都市・100件限定で、プランAの全工程を実施します。
+            継続される場合は、この費用を初期費用に充当します。
+          </p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2>進め方</h2>
+    </div>
+    <div class="sec-body">
+      <div class="timeline">
+        <div class="step">
+          <span class="step-week">1週目</span>
+          <p>ターゲット設計のすり合わせ、商品資料のご提供、文面のご確認</p>
+        </div>
+        <div class="step">
+          <span class="step-week">2週目</span>
+          <p>リスト構築と連絡先の特定、配信リストのご確認</p>
+        </div>
+        <div class="step">
+          <span class="step-week">3週目</span>
+          <p>配信開始</p>
+        </div>
+        <div class="step">
+          <span class="step-week">4週目</span>
+          <p>追客、月次レポートの提出、次月の方針決定</p>
+        </div>
+      </div>
+      <p>
+        以降は月次で繰り返します。配信リストと文面は、毎回ご確認をいただいてから送信します。
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <h2>ご報告する数値</h2>
+    </div>
+    <div class="sec-body">
+      <p>毎月、以下の形式でお出しします。</p>
+
+      <div class="report">
+<pre>ファネル
+  収集した店舗              412
+  メール取得済み             247  (60.0%)
+  送信                    247
+  　うちバウンス               13
+  到達                    234  (94.7%)
+  返信                     17  (7.3%)
+  前向きな返信                 9  (52.9%)
+  商談化                     3  (1.3%)
+
+文面 A/B（返信率）
+  枝 A: 返信率 5.9%    枝 B: 返信率 8.5%
+  差分: B が A より 2.6pt 高い / p値 0.095
+  → 傾向あり。次月は B に寄せます</pre>
+      </div>
+      <p class="report-caption">※ 上記は書式の例であり、実績値ではありません。</p>
+
+      <h3>指標の定義</h3>
+      <p>
+        定義は契約期間中固定します。毎月定義を変えて数字をよく見せることはしません。
+      </p>
+      <dl class="defs">
+        <div>
+          <dt>到達率</dt>
+          <dd>(送信 − バウンス) ÷ 送信</dd>
+        </div>
+        <div>
+          <dt>返信率</dt>
+          <dd>返信 ÷ 到達</dd>
+          <dd class="note">分母は送信ではなく到達です。届いていない宛先を分母に入れると、文面の良し悪しが測れなくなるためです。</dd>
+        </div>
+        <div>
+          <dt>商談化率</dt>
+          <dd>商談 ÷ 到達</dd>
+        </div>
+      </dl>
+      <p>
+        母数が少ない月は「参考値」と明記します。差が出ていないものを、出たことにはしません。
+      </p>
+
+      <h3>想定レンジ</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>実績ではなく、業界の一般的な水準にもとづく見込み</caption>
+          <thead>
+            <tr>
+              <th scope="col">指標</th>
+              <th scope="col" class="num">想定レンジ</th>
+              <th scope="col">補足</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">メールアドレス取得率</th>
+              <td class="num">40 〜 65%</td>
+              <td>国と業種によります。個人店が多い地域ほど低くなります</td>
+            </tr>
+            <tr>
+              <th scope="row">到達率</th>
+              <td class="num">90 〜 95%</td>
+              <td>90%を下回る場合はリストの品質を見直します</td>
+            </tr>
+            <tr class="is-highlight">
+              <th scope="row">返信率</th>
+              <td class="num">3 〜 10%</td>
+              <td>商品と対象業種の相性に最も大きく左右されます</td>
+            </tr>
+            <tr>
+              <th scope="row">商談化率</th>
+              <td class="num">1 〜 3%</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        初月は文面の当たりが分からないため、レンジの下限を想定してください。
+        2〜3ヶ月目に比較結果が溜まり、数値が動きます。
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">05</span>
+      <h2>対応範囲外</h2>
+    </div>
+    <div class="sec-body">
+      <div class="exclusions">
+        <p style="margin:0;max-width:var(--measure)">
+          後の食い違いを避けるため明記します。以下は<strong>本サービスに含みません</strong>。
+        </p>
+        <ul>
+          <li>価格交渉・契約条件の取りまとめ</li>
+          <li>見積書・請求書の発行、代金回収、与信管理</li>
+          <li>輸送手配、通関、関税・輸入規制への対応</li>
+          <li>納品後のクレーム対応、返品処理</li>
+          <li>売上・受注の保証</li>
+        </ul>
+        <p style="margin:0;max-width:var(--measure)">
+          商談の場に同席し議事録をまとめることは可能ですが、<strong>交渉の当事者にはなりません</strong>。
+          商談以降は貴社にお引き継ぎします。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">06</span>
+      <h2>前提条件</h2>
+    </div>
+    <div class="sec-body">
+      <ul class="plain">
+        <li>
+          <strong>商品資料</strong>（写真・卸価格・最低発注額・納期・発送条件）を事前にご用意ください。
+          これが揃っていないと、返信が来ても商談に進みません。<strong>最も多い停滞要因です。</strong>
+        </li>
+        <li>配信は貴社ドメインではなく、弊社が用意する専用ドメインから行います（貴社ドメインの評価を守るため）。</li>
+        <li>EU向けの配信には配信停止の導線を必ず入れます。停止のご要望があった先へは、以降一切連絡しません。</li>
+        <li>対象国・業種の追加は、1件につき月額 +5万円で承ります。</li>
+        <li>Google Places API の利用料は実費でご請求します（月あたり数千円程度）。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">07</span>
+      <h2>料金まとめ</h2>
+    </div>
+    <div class="sec-body">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">プラン</th>
+              <th scope="col" class="num">初期費用</th>
+              <th scope="col" class="num">月額</th>
+              <th scope="col">報告KPI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">トライアル</th>
+              <td class="num">—</td>
+              <td class="num">10万円<br><small>1ヶ月・1都市・100件</small></td>
+              <td>到達数・返信数</td>
+            </tr>
+            <tr>
+              <th scope="row">A. リード獲得</th>
+              <td class="num">15万円</td>
+              <td class="num">8万円</td>
+              <td>到達数・返信数</td>
+            </tr>
+            <tr class="is-highlight">
+              <th scope="row">B. 商談創出</th>
+              <td class="num">20万円</td>
+              <td class="num">20万円</td>
+              <td>商談数</td>
+            </tr>
+            <tr>
+              <th scope="row">B. 成果報酬型</th>
+              <td class="num">20万円</td>
+              <td class="num">10万円<br><small>＋ 商談1件 2.5万円</small></td>
+              <td>商談数</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        契約期間は3ヶ月から。1ヶ月前の通知で解約できます。
+        初月のリストと配信結果は、解約された場合もそのままお渡しします。
+      </p>
+    </div>
+  </section>
+
+  <footer class="sign">
+    <div>
+      <strong class="fill">〈自社名〉</strong>
+      <span class="fill">〈担当者名〉</span>
+    </div>
+    <div>
+      <span class="fill">〈メールアドレス〉</span>
+      <span class="fill">〈電話番号〉</span>
+    </div>
+  </footer>
+
+</div>

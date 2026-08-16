@@ -160,6 +160,41 @@ def compose(
     return result
 
 
+def followup(
+    store: Store,
+    profile: Profile,
+    days: int = 7,
+    lang: str = "auto",
+    limit: Optional[int] = None,
+    report: Reporter = stderr_reporter,
+) -> StageResult:
+    """反応のないリードに追客文面を作る。
+
+    A/B の枝は初回送信から引き継ぐ。追客で枝を変えると、返信がどちらの文面に
+    よるものか分からなくなり、A/B の集計が壊れるため。
+    """
+    targets = store.leads_awaiting_followup(days=days, limit=limit)
+    report("追客対象: {} 件（初回送信から{}日以上・反応なし）".format(len(targets), days))
+
+    result = StageResult()
+    for lead in targets:
+        if not lead.id:
+            continue
+        sends = [e for e in store.events(lead.id) if e["kind"] == "sent"]
+        variant = sends[-1]["variant"] if sends else "auto"
+        subject, body, resolved_lang, resolved_variant = render(
+            lead, profile, template="followup", lang=lang, variant=variant or "auto"
+        )
+        store.save_draft(
+            lead.id, resolved_lang, resolved_variant, "followup", subject, body)
+        result.drafted += 1
+
+    if result.drafted:
+        report("      追客文面を {} 件生成しました。`jepra export --stage sent` で"
+               "取り出せます。".format(result.drafted))
+    return result
+
+
 def run(
     store: Store,
     query: Query,

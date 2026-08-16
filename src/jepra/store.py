@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Iterable, List, Optional
 
 from .models import EVENT_KINDS, STAGES, Event, Lead
@@ -216,6 +216,57 @@ class Store:
 
     def count_leads(self) -> int:
         return int(self.conn.execute("SELECT COUNT(*) AS c FROM leads").fetchone()["c"])
+
+    # 返事を待っている／こちらが返す番のリードを取り出す。フォロー漏れは
+    # 商談数に直結するので、勘ではなくクエリで拾えるようにしておく。
+
+    #: 以後の接触を止めるべきイベント。追客対象から必ず除外する。
+    STOP_KINDS = ("replied", "bounced", "unsubscribed", "closed")
+
+    def leads_awaiting_followup(
+        self, days: int = 7, template: str = "intro", limit: Optional[int] = None
+    ) -> List[Lead]:
+        """初回送信から days 日以上たっても反応がなく、まだ追客していないリード。"""
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        placeholders = ", ".join("?" for _ in self.STOP_KINDS)
+        sql = """
+            SELECT l.* FROM leads l
+            JOIN events e ON e.lead_id = l.id AND e.kind = 'sent' AND e.template = ?
+            WHERE e.ts <= ?
+              AND NOT EXISTS (
+                    SELECT 1 FROM events s
+                    WHERE s.lead_id = l.id AND s.kind IN ({stops}))
+              AND NOT EXISTS (
+                    SELECT 1 FROM events f
+                    WHERE f.lead_id = l.id AND f.kind = 'sent' AND f.template != ?)
+            GROUP BY l.id
+            ORDER BY e.ts ASC
+        """.format(stops=placeholders)
+        params: List[Any] = [template, cutoff] + list(self.STOP_KINDS) + [template]
+        if limit:
+            sql += " LIMIT ?"
+            params.append(limit)
+        return [self._to_lead(r) for r in self.conn.execute(sql, params)]
+
+    def leads_needing_reply(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+        """返信が来たのに、まだこちらが判断を記録していないリード。"""
+        sql = """
+            SELECT l.*, e.ts AS replied_at FROM leads l
+            JOIN events e ON e.lead_id = l.id AND e.kind = 'replied'
+            WHERE NOT EXISTS (
+                    SELECT 1 FROM events x
+                    WHERE x.lead_id = l.id
+                      AND x.kind IN ('positive', 'meeting', 'won', 'closed', 'unsubscribed'))
+            ORDER BY e.ts ASC
+        """
+        params: List[Any] = []
+        if limit:
+            sql += " LIMIT ?"
+            params.append(limit)
+        return [
+            {"lead": self._to_lead(row), "replied_at": row["replied_at"]}
+            for row in self.conn.execute(sql, params)
+        ]
 
     @staticmethod
     def _to_lead(row: sqlite3.Row) -> Lead:

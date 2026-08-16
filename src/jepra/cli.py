@@ -245,6 +245,41 @@ def cmd_log(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_followup(args: argparse.Namespace) -> int:
+    profile = Profile.load(args.profile)
+    with Store(args.db) as store:
+        pipeline.followup(store, profile, days=args.days,
+                          lang=args.lang, limit=args.limit)
+    return 0
+
+
+def cmd_inbox(args: argparse.Namespace) -> int:
+    """こちらが動く番のリードを出す。段階3（商談創出）の日次の起点。"""
+    with Store(args.db) as store:
+        pending = store.leads_needing_reply(limit=args.limit)
+        heading("返信あり・未対応 ({}件)".format(len(pending)))
+        if not pending:
+            print("  対応待ちはありません。")
+        for entry in pending:
+            lead = entry["lead"]
+            print("  [{}] {} / {} <{}>".format(
+                lead.id, lead.name, lead.city, lead.email))
+            print("       返信日時 {}  →  jepra log positive --lead {}".format(
+                entry["replied_at"][:16], lead.id))
+
+        waiting = store.leads_awaiting_followup(days=args.days)
+        heading("追客推奨 ({}件・初回送信から{}日以上)".format(len(waiting), args.days))
+        for lead in waiting[:args.limit or 20]:
+            print("  [{}] {} / {} <{}>".format(
+                lead.id, lead.name, lead.city, lead.email))
+        if len(waiting) > (args.limit or 20):
+            print("  ... 他 {} 件".format(len(waiting) - (args.limit or 20)))
+        if waiting:
+            print("\n  `jepra followup --days {}` で追客文面をまとめて生成できます。".format(
+                args.days))
+    return 0
+
+
 def cmd_stats(args: argparse.Namespace) -> int:
     filters = {k: v for k, v in
                (("city", args.city), ("category", args.category),
@@ -464,6 +499,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--template", default="")
     p.add_argument("--note", default="")
     p.set_defaults(func=cmd_log)
+
+    p = add("inbox", "対応待ち・追客推奨のリードを一覧する")
+    p.add_argument("--days", type=int, default=7, help="追客までの日数 (既定: %(default)s)")
+    p.add_argument("--limit", type=int, default=None)
+    p.set_defaults(func=cmd_inbox)
+
+    p = add("followup", "反応のないリードに追客文面を作る")
+    p.add_argument("--days", type=int, default=7, help="初回送信からの経過日数")
+    p.add_argument("--lang", default="auto")
+    p.add_argument("--limit", type=int, default=None)
+    p.add_argument("--profile", default="jepra.profile.json")
+    p.set_defaults(func=cmd_followup)
 
     p = add("stats", "到達率・返信率などを集計する")
     p.add_argument("--by", default=None, choices=sorted(metrics.DIMENSIONS),
