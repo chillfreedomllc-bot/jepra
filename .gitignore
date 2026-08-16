@@ -1,0 +1,21 @@
+# データベース（実案件のリードが入るのでコミットしない）
+*.db
+*.db-journal
+
+# 差出人情報（メールアドレス等を含む）
+jepra.profile.json
+
+# 出力物
+*.csv
+!data/legacy/*.csv
+!src/jepra/fixtures/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
