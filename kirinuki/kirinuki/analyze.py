@@ -28,6 +28,66 @@ class Level:
 
 
 @dataclass
+class Profile:
+    """その素材の音量の分布。しきい値を素材ごとに自動で合わせるために使う。
+
+    録音レベルは素材ごとに違うので「何dB以上」を手で指定させると毎回当てにいく
+    ことになる。かといって「上位何%」も駄目で、3分の素材と3時間の素材では
+    悲鳴が占める割合がまるで違う（前者は数%、後者は0.1%以下）。
+
+    そこで**鳴っている窓だけ**を集めて、その広がり（中央値から75%点まで）を見る。
+    この何倍まで離れているかで外れ値を判定すれば、長さにも録音レベルにも、
+    静かな時間の割合にも依存しない。
+
+    無音を混ぜてはいけない。混ぜると「静かな時間が長い素材」で分布が二山になり、
+    広がりが跳ね上がって、しきい値が到達不可能な高さになる。
+    """
+
+    quiet_db: float    # 静かな場面の目安（下位25%）
+    speech_db: float   # 普段しゃべっている高さ（上位25%の境目）
+    cut_db: float      # ここを超えたら反応とみなす
+
+    def describe(self) -> str:
+        return "静か {:.1f} / 普段 {:.1f} / 反応の境目 {:.1f} dBFS".format(
+            self.quiet_db, self.speech_db, self.cut_db)
+
+
+#: 分布が平坦な素材でも、普段の高さからこれだけは離す。
+MIN_GAP_DB = 6.0
+
+
+def profile_levels(
+    levels: Sequence[Level],
+    sensitivity: float = 1.5,
+    threshold_db: Optional[float] = None,
+) -> Profile:
+    """音量の分布から、判定に使う3つの基準を決める。
+
+    普段の高さに中央値ではなく75%点を使うのは、静かな場面が長い素材で
+    基準が下へ引っ張られ、ただの喋りまで「反応」になってしまうため。
+    """
+    if not levels:
+        return Profile(SILENCE_FLOOR_DB, SILENCE_FLOOR_DB, SILENCE_FLOOR_DB)
+    values = np.array([l.db for l in levels], dtype=np.float32)
+    quiet = float(np.percentile(values, 25))
+
+    # 判定は「鳴っている窓」だけで行う。無音しかない素材では全体に戻す。
+    audible = values[values > SILENCE_FLOOR_DB]
+    if audible.size < 10:
+        audible = values
+    speech = float(np.percentile(audible, 75))
+
+    if threshold_db is not None:
+        cut = speech + threshold_db
+    else:
+        # 中央値から75%点までの広がりの sensitivity 倍を、外れ値の境目とする。
+        # 喋りっぱなしで幅が出ない素材ではこれがほぼ0になるので、下限を設ける。
+        spread = speech - float(np.percentile(audible, 50))
+        cut = max(speech + sensitivity * spread, speech + MIN_GAP_DB)
+    return Profile(quiet_db=quiet, speech_db=speech, cut_db=cut)
+
+
+@dataclass
 class Moment:
     """盛り上がっている一区間。"""
 
@@ -120,15 +180,24 @@ def _quiet_before(levels: Sequence[Level], index: int, window: float,
 def find_moments(
     levels: Sequence[Level],
     window: float = 0.5,
-    threshold_db: float = 8.0,
+    profile: Optional[Profile] = None,
+    sensitivity: float = 1.5,
+    threshold_db: Optional[float] = None,
     min_duration: float = 0.4,
     merge_gap: float = 2.0,
 ) -> List[Moment]:
-    """ベースラインを threshold_db 超えた区間を拾う。"""
+    """普段より突出して大きい区間を拾う。
+
+    境目は分布の広がりから自動で決まる。dB で直接指定したい場合だけ
+    threshold_db を使う（普段の高さからの相対値）。
+    """
     if not levels:
         return []
-    base = baseline_db(levels)
-    limit = base + threshold_db
+    if profile is None:
+        profile = profile_levels(levels, sensitivity=sensitivity,
+                                 threshold_db=threshold_db)
+    base = profile.speech_db
+    limit = profile.cut_db
 
     # まず「超えている窓」を連続区間にまとめる。
     spans: List[List[int]] = []
@@ -201,8 +270,11 @@ def build_clips(
             previous = clips[-1]
             previous.end = max(previous.end, end)
             previous.moments.append(moment)
-            previous.score = round(max(previous.score, moment.score)
-                                   + 0.5 * (len(previous.moments) - 1), 2)
+            # 反応がまとまっている区間は少しだけ加点する。ここを大きくすると、
+            # 単発の悲鳴より「よく喋っている区間」が上に来てしまう。
+            bonus = min(0.4 * (len(previous.moments) - 1), 2.5)
+            previous.score = round(
+                max(m.score for m in previous.moments) + bonus, 2)
         else:
             clips.append(Clip(start=start, end=end, score=moment.score,
                               moments=[moment]))
@@ -240,6 +312,7 @@ def parse_timestamp(text: str) -> float:
 
 
 __all__ = [
-    "Clip", "Level", "Moment", "baseline_db", "build_clips", "find_moments",
-    "format_timestamp", "levels_from_chunks", "levels_from_pcm", "parse_timestamp",
+    "Clip", "Level", "Moment", "Profile", "baseline_db", "build_clips",
+    "find_moments", "format_timestamp", "levels_from_chunks", "levels_from_pcm",
+    "parse_timestamp", "profile_levels",
 ]

@@ -10,11 +10,12 @@ from typing import List, Optional
 
 from . import ffmpeg
 from .analyze import (
-    Clip, baseline_db, build_clips, find_moments, format_timestamp, levels_from_chunks,
+    Clip, build_clips, find_moments, format_timestamp, levels_from_chunks,
+    profile_levels,
 )
 from .extract import cut_clips
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 def log(message: str = "") -> None:
@@ -37,24 +38,28 @@ def analyse(path: str, args: argparse.Namespace) -> tuple:
     if not levels:
         raise SystemExit("音声が取れませんでした。音声トラックがあるか確認してください。")
 
-    base = baseline_db(levels)
-    moments = find_moments(
-        levels, window=args.window, threshold_db=args.threshold,
-        merge_gap=args.merge_gap,
-    )
+    profile = profile_levels(levels, sensitivity=args.sensitivity,
+                             threshold_db=args.threshold)
+    moments = find_moments(levels, window=args.window, profile=profile,
+                           merge_gap=args.merge_gap)
     clips = build_clips(
         moments, duration=duration,
         pre_roll=args.pre_roll, post_roll=args.post_roll, max_length=args.max_length,
     )
-    log("  普段の音量: {:.1f} dBFS / 反応を検出: {}箇所 → 切り抜き候補 {}本".format(
-        base, len(moments), len(clips)))
-    return clips, duration, base
+    log("  音量: {}".format(profile.describe()))
+    log("  反応を検出: {}箇所 → 切り抜き候補 {}本".format(len(moments), len(clips)))
+
+    # 録音レベルが低すぎると、音量の差そのものが潰れて検出が効かなくなる。
+    if profile.speech_db < -35.0:
+        log("  ※ 録音レベルが低めです（普段 {:.1f} dBFS）。"
+            "音の差が出にくく、検出精度が落ちます。".format(profile.speech_db))
+    return clips, duration, profile
 
 
 def print_table(clips: List[Clip], limit: Optional[int]) -> None:
     shown = clips[:limit] if limit else clips
     if not shown:
-        log("\n候補が見つかりませんでした。--threshold を下げて試してください（既定 8.0）。")
+        log("\n候補が見つかりませんでした。--sensitivity 1.0 で拾いやすくなります。")
         return
 
     print()
@@ -103,7 +108,7 @@ def cmd_scan(args: argparse.Namespace) -> int:
 def cmd_cut(args: argparse.Namespace) -> int:
     clips, _, _ = analyse(args.video, args)
     if not clips:
-        log("候補がないので切り出しませんでした。--threshold を下げてみてください。")
+        log("候補がないので切り出しませんでした。--sensitivity 1.0 を試してください。")
         return 1
 
     selected = clips[:args.top] if args.top else clips
@@ -151,8 +156,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     def add_common(sub: argparse.ArgumentParser) -> None:
         sub.add_argument("video", help="生素材の動画ファイル")
-        sub.add_argument("--threshold", type=float, default=8.0,
-                         help="普段の音量から何dB跳ねたら反応とみなすか (既定 %(default)s)")
+        sub.add_argument("--sensitivity", type=float, default=1.5,
+                         help="拾う厳しさ (既定 %(default)s)。"
+                              "候補が多すぎるなら 2.0、少なすぎるなら 1.0")
+        sub.add_argument("--threshold", type=float, default=None,
+                         help="dBで直接指定する場合（普段の音量からの差）。"
+                              "指定すると --sensitivity より優先される")
         sub.add_argument("--pre-roll", type=float, default=8.0,
                          help="反応の何秒前から切るか (既定 %(default)s)")
         sub.add_argument("--post-roll", type=float, default=3.0,

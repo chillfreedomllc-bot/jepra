@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 
 from kirinuki.analyze import (
+    MIN_GAP_DB, profile_levels,
     Level, baseline_db, build_clips, find_moments, format_timestamp,
     levels_from_chunks, levels_from_pcm, parse_timestamp,
 )
@@ -79,6 +80,44 @@ class TestBaseline(unittest.TestCase):
     def test_all_silent_does_not_crash(self):
         levels = levels_from_pcm(pcm_from_db([(2.0, -80.0)]))
         self.assertLess(baseline_db(levels), -50.0)
+
+
+class TestProfile(unittest.TestCase):
+    def test_speech_level_ignores_long_silence(self):
+        # 静かな時間が長くても「普段の高さ」は喋りの高さであるべき。
+        levels = levels_from_pcm(pcm_from_db([(30.0, -60.0), (30.0, -20.0)]))
+        self.assertAlmostEqual(profile_levels(levels).speech_db, -20.0, delta=2.0)
+
+    def test_flat_source_uses_the_minimum_gap(self):
+        # 音量が一定なら広がりが0になる。境目が普段の高さに張り付くと
+        # 全部が「反応」になってしまうので、最低限の差を空ける。
+        levels = levels_from_pcm(pcm_from_db([(30.0, -20.0)]))
+        profile = profile_levels(levels)
+        self.assertAlmostEqual(profile.cut_db - profile.speech_db, MIN_GAP_DB, delta=0.5)
+
+    def test_quiet_heavy_source_stays_reachable(self):
+        # 無音が多い素材で四分位範囲を使うと境目が跳ね上がり、到達不能になる。
+        # 上半分の広がりで測ることで、実際に鳴っている音より上に行かないこと。
+        levels = levels_from_pcm(
+            pcm_from_db([(10.0, -20.0), (20.0, -60.0), (2.0, -6.0)]))
+        profile = profile_levels(levels)
+        self.assertLess(profile.cut_db, -6.0)
+
+    def test_threshold_overrides_the_automatic_cut(self):
+        levels = levels_from_pcm(pcm_from_db([(30.0, -20.0)]))
+        profile = profile_levels(levels, threshold_db=20.0)
+        self.assertAlmostEqual(profile.cut_db - profile.speech_db, 20.0, delta=0.5)
+
+    def test_higher_sensitivity_raises_the_cut(self):
+        levels = levels_from_pcm(
+            pcm_from_db([(10.0, -40.0), (10.0, -30.0), (10.0, -22.0)]))
+        loose = profile_levels(levels, sensitivity=1.0).cut_db
+        strict = profile_levels(levels, sensitivity=3.0).cut_db
+        self.assertGreater(strict, loose)
+
+    def test_empty_levels(self):
+        profile = profile_levels([])
+        self.assertEqual(profile.speech_db, profile.cut_db)
 
 
 class TestFindMoments(unittest.TestCase):
