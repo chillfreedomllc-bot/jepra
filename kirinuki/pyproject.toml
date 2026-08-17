@@ -1,6 +1,6 @@
 [project]
 name = "kirinuki"
-version = "0.4.0"
+version = "0.5.0"
 description = "ゲーム実況の生素材から盛り上がり箇所を見つけて切り出す"
 readme = "README.md"
 requires-python = ">=3.9"

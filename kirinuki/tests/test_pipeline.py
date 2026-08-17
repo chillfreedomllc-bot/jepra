@@ -158,5 +158,25 @@ class TestSpeedFilters(unittest.TestCase):
         _, audio = _speed_filters(3.0)
         self.assertEqual(audio.count("atempo"), 2)
 
+
+class TestAudioTracks(unittest.TestCase):
+    """音声トラックの選択。
+
+    ゲームバーの録画はマイクとゲーム音が1本に混ざるため、どちらが鳴ったのか
+    区別できない。OBS で別トラックに録れば、マイクだけを解析できる。
+    """
+
+    def test_lists_the_single_track_of_the_fixture(self):
+        tracks = ffmpeg.list_audio_tracks(FIXTURE)
+        self.assertEqual(len(tracks), 1)
+        self.assertEqual(tracks[0]["index"], "0")
+
+    def test_track_zero_is_the_default(self):
+        self.assertEqual(ffmpeg.read_pcm(FIXTURE), ffmpeg.read_pcm(FIXTURE, track=0))
+
+    def test_missing_track_raises(self):
+        with self.assertRaises(RuntimeError):
+            ffmpeg.read_pcm(FIXTURE, track=5)
+
 if __name__ == "__main__":
     unittest.main()

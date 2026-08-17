@@ -225,11 +225,13 @@ if __name__ == "__main__":
 
 
 class TestScreamVsLoudTalking(unittest.TestCase):
-    """「悲鳴」と「ただの大声」を分けられること。
+    """「悲鳴」と「ただの大声」の扱い。
 
-    実素材で外れた候補は全て「喋ってはいるが大声なだけ」だった。音量だけ見ると
-    両者は同じなので、立ち上がりの速さ（直前1.5秒からの跳ね上がり）で分ける。
-    悲鳴は1秒足らずで上がり、大声は数秒かけて上がる。
+    実素材で外れた候補は全て「喋ってはいるが大声なだけ」だった。一度これを
+    立ち上がりの速さで分ける形に組み替えたが、実素材の成績が落ちたため
+    （10本中7本使える → 5本）スコアからは外した。attack_db は記録だけ残して
+    あるので、ここでは「記録できていること」と「現状どこまで分けられるか」を
+    確かめる。
     """
 
     def scream(self):
@@ -264,8 +266,13 @@ class TestScreamVsLoudTalking(unittest.TestCase):
                       key=lambda m: m.score)
         self.assertGreater(scream.attack_db, talking.attack_db)
 
-    def test_sustained_loudness_is_penalised(self):
-        # 3秒を超えて大きいままの区間は、反応ではなく喋りっぱなし。
+    def test_sustained_loudness_is_not_penalised(self):
+        """長く続く大音量に減点はしない。これは既知の弱点。
+
+        「3秒を超えたら減点」を試したが、実素材で成績が落ちたので戻した。
+        そのため喋りっぱなしで大きい区間も候補に残る。音だけでは切り分け
+        きれていない部分で、直すにはマイクを別トラックで録る必要がある。
+        """
         short = pcm_from_db([(60.0, -23.0), (1.0, -30.0), (1.5, -6.0), (40.0, -23.0)])
         long = pcm_from_db([(60.0, -23.0), (1.0, -30.0), (9.0, -6.0), (40.0, -23.0)])
-        self.assertGreater(self.top_score(short), self.top_score(long))
+        self.assertGreaterEqual(self.top_score(long), self.top_score(short))

@@ -256,12 +256,15 @@ def find_moments(
         excess = peak - base
         # 落差の加点。直前がベースラインより静かなほど効く（上限12dB）。
         contrast = min(max(base - quiet, 0.0), 12.0)
-        # 立ち上がりの速さ。悲鳴と「ただの大声」を分ける一番効く指標なので重く見る。
-        suddenness = min(max(attack, 0.0), 25.0)
-        # 長く続く大きさは反応ではなく喋りっぱなし。3秒を超えたぶんは減点する。
-        overlong = max(end - start - 3.0, 0.0)
+        # 一瞬のノイズより、続いた反応を上に置く（上限2秒ぶん）。
+        sustain = min(end - start, 2.0)
 
-        score = excess * 0.6 + suddenness * 1.2 + contrast * 0.4 - overlong * 2.0
+        # 一度これを「立ち上がりの速さ」重視に組み替えたが、実素材で成績が落ちた
+        # （10本中7本使える → 5本）。しかも同じ切り抜きの評価が回によって逆転し、
+        # 判断の土台が安定していなかった。推測で係数を動かすのをやめ、実測で
+        # 一番良かったこの形に戻してある。attack_db は記録だけ続ける（後で
+        # 判断材料が揃ったときに使えるように）。
+        score = excess + contrast * 0.8 + sustain * 2.0
 
         moments.append(Moment(
             start=start, end=end, peak_db=peak, excess_db=excess,

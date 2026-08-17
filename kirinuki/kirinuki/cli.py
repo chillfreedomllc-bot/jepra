@@ -15,7 +15,7 @@ from .analyze import (
 )
 from .extract import cut_clips
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 
 def log(message: str = "") -> None:
@@ -33,8 +33,18 @@ def analyse(path: str, args: argparse.Namespace) -> tuple:
         "（{}）".format(format_timestamp(duration)) if duration else "",
     ))
 
+    tracks = ffmpeg.list_audio_tracks(path)
+    if len(tracks) > 1:
+        log("  音声トラック: {}本（{}番目を解析）".format(len(tracks), args.audio_track + 1))
+    if args.audio_track >= max(len(tracks), 1):
+        raise SystemExit(
+            "音声トラック {} 番はありません。この動画には {} 本しかありません。\n"
+            "`kirinuki tracks 動画.mp4` で一覧を確認してください。".format(
+                args.audio_track + 1, len(tracks)))
+
     levels = levels_from_chunks(
-        ffmpeg.iter_pcm(path, threads=args.threads), window=args.window)
+        ffmpeg.iter_pcm(path, threads=args.threads, track=args.audio_track),
+        window=args.window)
     if not levels:
         raise SystemExit("音声が取れませんでした。音声トラックがあるか確認してください。")
 
@@ -139,6 +149,27 @@ def cmd_cut(args: argparse.Namespace) -> int:
     return 0 if ok == len(results) else 1
 
 
+def cmd_tracks(args: argparse.Namespace) -> int:
+    """音声トラックを一覧する。どれがマイクかを確かめるため。"""
+    tracks = ffmpeg.list_audio_tracks(args.video)
+    if not tracks:
+        print("音声トラックが見つかりませんでした。")
+        return 1
+
+    print("音声トラック {}本".format(len(tracks)))
+    for track in tracks:
+        print("  --audio-track {}  {}{}".format(
+            track["index"],
+            track["detail"],
+            "  [{}]".format(track["language"]) if track["language"] else ""))
+    if len(tracks) == 1:
+        print()
+        print("1本しかないため、マイクとゲーム音が混ざっています。")
+        print("どちらが鳴ったのか区別できないので、検出の精度には限界があります。")
+        print("OBS で音声を別トラックに分けて録ると、マイクだけを解析できます。")
+    return 0
+
+
 def cmd_config(args: argparse.Namespace) -> int:
     """保存先などを憶えさせる。以後 --out を毎回書かなくてよくなる。"""
     if args.out:
@@ -195,6 +226,9 @@ def build_parser() -> argparse.ArgumentParser:
                          help="この秒数以内の反応は1つにまとめる (既定 %(default)s)")
         sub.add_argument("--window", type=float, default=0.5,
                          help="音量を測る窓の長さ (既定 %(default)s秒)")
+        sub.add_argument("--audio-track", type=int, default=0,
+                         help="解析する音声トラック番号（0始まり）。OBSでマイクを"
+                              "別トラックに録っている場合に指定する")
         sub.add_argument("--threads", type=int, default=0,
                          help="ffmpegが使うCPUスレッド数の上限。"
                               "0=制限なし。他の作業と並行するなら 2 程度を指定")
@@ -204,6 +238,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--top", type=int, default=20, help="表示する本数 (既定 %(default)s)")
     p.add_argument("--csv", default="", help="一覧をCSVに書き出す")
     p.set_defaults(func=cmd_scan)
+
+    p = subparsers.add_parser("tracks", help="音声トラックを一覧する")
+    p.add_argument("video")
+    p.set_defaults(func=cmd_tracks)
 
     p = subparsers.add_parser("config", help="保存先を憶えさせる")
     p.add_argument("--out", default="",

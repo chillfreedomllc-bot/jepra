@@ -8,10 +8,11 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 from functools import lru_cache
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 class FFmpegMissing(RuntimeError):
@@ -100,8 +101,32 @@ def probe_duration(path: str) -> Optional[float]:
     return None
 
 
+def list_audio_tracks(path: str) -> List[Dict[str, str]]:
+    """動画に入っている音声トラックを列挙する。
+
+    ゲームバーの録画はマイクとゲーム音が1本に混ざっているため、どちらが鳴ったのか
+    区別できない。OBS のように別トラックで録っておけば、マイクだけを解析できる。
+    """
+    result = subprocess.run(
+        [ffmpeg_path(), "-i", path], capture_output=True, text=True, errors="replace"
+    )
+    tracks: List[Dict[str, str]] = []
+    pattern = re.compile(r"Stream #0:(\d+)(?:\[[^\]]*\])?(?:\(([^)]*)\))?: Audio: ([^\n]*)")
+    for line in result.stderr.splitlines():
+        match = pattern.search(line)
+        if not match:
+            continue
+        tracks.append({
+            "index": str(len(tracks)),        # -map 0:a:N で使う番号
+            "stream": match.group(1),
+            "language": match.group(2) or "",
+            "detail": match.group(3).strip(),
+        })
+    return tracks
+
+
 def iter_pcm(path: str, rate: int = 16000, threads: int = 0,
-             chunk_frames: int = 1 << 19):
+             track: int = 0, chunk_frames: int = 1 << 19):
     """音声を少しずつ読み出す。
 
     3時間の素材だと PCM は 350MB になる。一度に抱えると numpy の変換で
@@ -111,7 +136,8 @@ def iter_pcm(path: str, rate: int = 16000, threads: int = 0,
     args = [ffmpeg_path(), "-v", "quiet"]
     if threads:
         args += ["-threads", str(threads)]
-    args += ["-i", path, "-f", "s16le", "-ac", "1", "-ar", str(rate), "-"]
+    args += ["-i", path, "-map", "0:a:{}".format(track),
+             "-f", "s16le", "-ac", "1", "-ar", str(rate), "-"]
 
     process = subprocess.Popen(args, stdout=subprocess.PIPE)
     produced = False
@@ -134,14 +160,14 @@ def iter_pcm(path: str, rate: int = 16000, threads: int = 0,
         )
 
 
-def read_pcm(path: str, rate: int = 16000) -> bytes:
+def read_pcm(path: str, rate: int = 16000, track: int = 0) -> bytes:
     """音声を 16bit モノラル PCM として取り出す。
 
     解析に必要なのは音量の変化だけなので、16kHz まで落として読み込み量を減らす。
     3時間の素材でも 350MB 程度に収まる。
     """
     result = run([
-        "-v", "quiet", "-i", path,
+        "-v", "quiet", "-i", path, "-map", "0:a:{}".format(track),
         "-f", "s16le", "-ac", "1", "-ar", str(rate), "-",
     ])
     if result.returncode != 0 or not result.stdout:
