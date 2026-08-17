@@ -68,6 +68,17 @@ kirinuki config --out "C:\Users\PC_User\Videos\ショート用切り抜き"
 初回だけ numpy と imageio-ffmpeg を自動で入れるので少し待つ。2回目からはすぐ動く。
 Python 3.9 以上が入っていることだけが前提（`python --version` で確認）。
 
+## 更新する
+
+同梱の `update.ps1` を実行すれば、GitHubから最新版を取って上書きする。
+
+```powershell
+cd "$env:USERPROFILE\kirinuki"
+powershell -ExecutionPolicy Bypass -File update.ps1
+```
+
+`kirinuki.json`（保存先の設定）はZIPに含まれないので消えない。
+
 ## インストールして使う（任意）
 
 コマンドで細かく指定したい場合。
