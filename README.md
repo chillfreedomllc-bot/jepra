@@ -13,6 +13,9 @@ kirinuki scan 実況.mp4
 
 Windows なら `kirinuki/` の中の `.bat` に動画をドラッグするだけでも動きます。
 
+切り抜きを YouTube ショート / TikTok に出すときの設定と運用は
+[`sns-strategy.md`](sns-strategy.md) にまとめています。
+
 ---
 
 以前は越境BtoBの営業支援ツールとフランスの店舗リストが入っていましたが、
