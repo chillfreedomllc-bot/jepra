@@ -8,14 +8,14 @@ import os
 import sys
 from typing import List, Optional
 
-from . import ffmpeg
+from . import config, ffmpeg
 from .analyze import (
     Clip, build_clips, find_moments, format_timestamp, levels_from_chunks,
     profile_levels,
 )
 from .extract import cut_clips
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 
 def log(message: str = "") -> None:
@@ -115,7 +115,8 @@ def cmd_cut(args: argparse.Namespace) -> int:
     print_table(selected, None)
 
     encoder = ffmpeg.pick_encoder(args.encoder)
-    out_dir = args.out or "kirinuki_out"
+    suffix = "kirinuki_shorts" if args.vertical else "kirinuki_out"
+    out_dir = config.resolve_out_dir(args.out, args.video, suffix)
     log("\n切り出し中 → {}/  （エンコーダ: {}{}）".format(
         out_dir, encoder, " ＝GPU" if encoder == "h264_nvenc" else " ＝CPU"))
 
@@ -135,6 +136,27 @@ def cmd_cut(args: argparse.Namespace) -> int:
     if ok:
         log("このフォルダの mp4 を CapCut にドラッグしてください。")
     return 0 if ok == len(results) else 1
+
+
+def cmd_config(args: argparse.Namespace) -> int:
+    """保存先などを憶えさせる。以後 --out を毎回書かなくてよくなる。"""
+    if args.out:
+        expanded = os.path.abspath(os.path.expanduser(args.out))
+        path = config.save({"out_dir": expanded})
+        print("保存先を憶えました: {}".format(expanded))
+        print("  設定ファイル: {}".format(path))
+        print("  以後、切り抜きは この中に「動画名のフォルダ」を作って入ります。")
+        return 0
+
+    current = config.load()
+    if not current:
+        print("設定はまだありません。")
+        print('  例: kirinuki config --out "C:\\Users\\PC_User\\Videos\\ショート用切り抜き"')
+        return 0
+    print("設定ファイル: {}".format(config.config_path()))
+    for key, value in sorted(current.items()):
+        print("  {} = {}".format(key, value))
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -182,10 +204,17 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--csv", default="", help="一覧をCSVに書き出す")
     p.set_defaults(func=cmd_scan)
 
+    p = subparsers.add_parser("config", help="保存先を憶えさせる")
+    p.add_argument("--out", default="",
+                   help="切り抜きの保存先フォルダ。省略すると現在の設定を表示する")
+    p.set_defaults(func=cmd_config)
+
     p = subparsers.add_parser("cut", help="候補をmp4に切り出す")
     add_common(p)
     p.add_argument("--top", type=int, default=10, help="切り出す本数 (既定 %(default)s)")
-    p.add_argument("--out", default="", help="出力フォルダ (既定 kirinuki_out)")
+    p.add_argument("--out", default="",
+                   help="出力フォルダ。省略時は kirinuki config で憶えさせた場所、"
+                        "それも無ければ動画と同じ場所")
     p.add_argument("--vertical", action="store_true",
                    help="9:16の縦型で出す（ショート用）")
     p.add_argument("--vertical-style", choices=["blur", "crop"], default="blur",

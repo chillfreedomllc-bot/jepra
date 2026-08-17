@@ -27,11 +27,11 @@ echo Preparing (first run only)...
 python -m pip install --quiet --disable-pip-version-check numpy imageio-ffmpeg
 
 echo.
-python -m kirinuki cut "%~1" --top 5 --vertical --out "%~dp1kirinuki_shorts"
+python -m kirinuki cut "%~1" --top 5 --vertical
 if errorlevel 1 goto :failed
 
 echo.
-echo Output folder: %~dp1kirinuki_shorts
+echo Done. The folder is shown above.
 goto :end
 
 :noarg

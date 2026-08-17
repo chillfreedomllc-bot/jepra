@@ -36,8 +36,24 @@ kirinuki cut  実況.mp4 --top 10     # 上位10本を切り出す
 | ファイル | やること | 出力先 |
 |---|---|---|
 | `1_候補を出す.bat` | 候補を一覧するだけ | 動画と同じ場所に `_candidates.csv` |
-| `2_切り抜きを作る.bat` | 上位10箇所を切り出す | 動画と同じ場所の `kirinuki_out/` |
-| `3_ショート用に縦型で作る.bat` | 上位5箇所を9:16で切り出す | 動画と同じ場所の `kirinuki_shorts/` |
+| `2_切り抜きを作る.bat` | 上位10箇所を切り出す | 下記の保存先 |
+| `3_ショート用に縦型で作る.bat` | 上位5箇所を9:16で切り出す | 下記の保存先 |
+
+### 保存先を決める
+
+一度だけ実行すれば、以後ずっとその場所に出る。
+
+```bash
+kirinuki config --out "C:\Users\PC_User\Videos\ショート用切り抜き"
+```
+
+指定した場所の中に**動画名のフォルダ**を作って入る。素材ごとに分かれるので、
+次の動画を処理しても前回のクリップと混ざらない。
+
+設定しない場合は、動画と同じ場所の `kirinuki_out/` に出る。
+
+保存先は `kirinuki.json` に記録される。`.bat` 側に書かないのは、
+日本語を含むパスを cmd に持たせられないため（CP932 で読まれて壊れる）。
 
 まず `1` を試して、候補の時刻が妥当そうなら `2` か `3` を実行する、という順番がいい。
 
@@ -144,7 +160,7 @@ kirinuki cut 実況.mp4 --threads 2       # CPUを2スレッドに制限
 ## 開発
 
 ```bash
-python3 -m unittest discover -s tests    # 46 tests
+python3 -m unittest discover -s tests    # 53 tests
 ```
 
 テストは合成動画（`tests/make_fixture.py`）を実際に ffmpeg で作って通す。
@@ -156,5 +172,6 @@ kirinuki/
   analyze.py   音量の解析、盛り上がりの検出、切り出し範囲の決定
   extract.py   ffmpegでの切り出しと縦型変換
   ffmpeg.py    ffmpegの場所解決、逐次読み出し、エンコーダ選択
+  config.py    保存先の記憶（kirinuki.json）
   cli.py       scan / cut
 ```

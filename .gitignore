@@ -23,3 +23,6 @@ venv/
 # kirinuki の出力・素材
 kirinuki_out/
 *.mp4
+
+# 保存先などの個人設定
+kirinuki.json
