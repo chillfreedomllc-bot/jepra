@@ -1,21 +1,45 @@
 @echo off
 rem ==============================================================
-rem  Drag a video file onto this .bat to cut the top 10 moments.
-rem  Output goes to a kirinuki_out folder next to the video.
+rem  Cuts the top 10 moments into mp4 files.
 rem
-rem  Keep this file ASCII-only, and avoid parenthesised if-blocks.
-rem  See 1_*.bat for why.
+rem  Two ways to use it:
+rem    1. Drag a video onto this .bat file's ICON in Explorer.
+rem    2. Double-click it, then drop the video INTO the window
+rem       and press Enter.
+rem
+rem  Way 2 exists because dropping a file into a window that is
+rem  sitting at `pause` just satisfies the pause and closes it.
+rem  People reasonably read "drag onto this .bat" as "drag into
+rem  this window", so the prompt has to accept that too.
+rem
+rem  Keep this file ASCII-only: cmd.exe on a Japanese Windows
+rem  reads .bat files in CP932, so UTF-8 Japanese inside the file
+rem  gets mangled and the script dies silently.
+rem  Also avoid parenthesised if-blocks: paths like "folder (1)"
+rem  break cmd's parser inside them. Use goto instead.
 rem ==============================================================
 chcp 65001 >nul
 setlocal
 
-if "%~1"=="" goto :noarg
+set "VIDEO=%~1"
+if not "%VIDEO%"=="" goto :run
+
+echo.
+echo   Drop the video file into this window, then press Enter.
+echo   (Or close this and drag the video onto the .bat icon.)
+echo.
+set /p "VIDEO=Video file: "
+set VIDEO=%VIDEO:"=%
+if "%VIDEO%"=="" goto :noarg
+
+:run
+if not exist "%VIDEO%" goto :notfound
 
 set "PYTHONPATH=%~dp0"
 set "PYTHONIOENCODING=utf-8"
 
 echo.
-echo ================ kirinuki : cut ================
+echo ================ kirinuki : cut =================
 echo.
 
 python --version
@@ -26,16 +50,22 @@ echo Preparing (first run only)...
 python -m pip install --quiet --disable-pip-version-check numpy imageio-ffmpeg
 
 echo.
-python -m kirinuki cut "%~1" --top 10
+python -m kirinuki cut "%VIDEO%" --top 10
 if errorlevel 1 goto :failed
 
 echo.
-echo Done. The folder is shown above.
+echo Done. The output folder is shown above.
 goto :end
 
 :noarg
 echo.
-echo   Drag a video file onto this .bat file.
+echo   No file given. Nothing to do.
+goto :end
+
+:notfound
+echo.
+echo   File not found: %VIDEO%
+echo   Copy the path with Shift + right-click on the video.
 goto :end
 
 :nopython
