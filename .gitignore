@@ -19,3 +19,7 @@ dist/
 .venv/
 venv/
 .pytest_cache/
+
+# kirinuki の出力・素材
+kirinuki_out/
+*.mp4

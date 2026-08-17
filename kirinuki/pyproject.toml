@@ -1,0 +1,21 @@
+[project]
+name = "kirinuki"
+version = "0.1.0"
+description = "ゲーム実況の生素材から盛り上がり箇所を見つけて切り出す"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.22",
+    # ffmpeg が PATH にあればそちらを使う。無い環境向けの同梱バイナリ。
+    "imageio-ffmpeg>=0.4.9",
+]
+
+[project.scripts]
+kirinuki = "kirinuki.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["kirinuki*"]
