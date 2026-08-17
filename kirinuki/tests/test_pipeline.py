@@ -108,5 +108,55 @@ class TestEncoderSelection(unittest.TestCase):
         self.assertIn(ffmpeg.pick_encoder("auto"), ("libx264", "h264_nvenc"))
 
 
+
+class TestSpeed(unittest.TestCase):
+    """再生速度を変えたときに、出力の長さが正しく縮むこと。
+
+    -t を -i の後ろに置くと「出力の長さ」の指定になり、速度を上げたぶん
+    元素材を余計に読んでしまう（1.25倍で13秒の出力を作るのに16.25秒読む）。
+    見た目には気づきにくく、切り抜きの終端が想定より先まで入る。
+    """
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        levels = levels_from_pcm(ffmpeg.read_pcm(FIXTURE))
+        self.clips = build_clips(find_moments(levels), duration=make_fixture.DURATION)
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def cut_at(self, speed):
+        result = cut_clips(FIXTURE, self.clips[:1], self.dir, speed=speed)[0]
+        self.assertTrue(result.ok, result.error)
+        return ffmpeg.probe_duration(result.path)
+
+    def test_normal_speed_matches_the_clip(self):
+        self.assertAlmostEqual(self.cut_at(1.0), self.clips[0].duration, delta=0.5)
+
+    def test_faster_speed_shortens_the_output(self):
+        expected = self.clips[0].duration / 1.25
+        self.assertAlmostEqual(self.cut_at(1.25), expected, delta=0.5)
+
+    def test_slower_speed_lengthens_the_output(self):
+        expected = self.clips[0].duration / 0.8
+        self.assertAlmostEqual(self.cut_at(0.8), expected, delta=0.5)
+
+
+class TestSpeedFilters(unittest.TestCase):
+    def test_normal_speed_adds_nothing(self):
+        from kirinuki.extract import _speed_filters
+        self.assertEqual(_speed_filters(1.0), ("", ""))
+
+    def test_audio_uses_atempo_to_keep_the_pitch(self):
+        from kirinuki.extract import _speed_filters
+        _, audio = _speed_filters(1.25)
+        self.assertIn("atempo", audio)
+
+    def test_large_factors_are_chained(self):
+        # atempo は 0.5〜2.0 しか受け付けないので、超える場合は連鎖が要る。
+        from kirinuki.extract import _speed_filters
+        _, audio = _speed_filters(3.0)
+        self.assertEqual(audio.count("atempo"), 2)
+
 if __name__ == "__main__":
     unittest.main()

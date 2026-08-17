@@ -15,7 +15,7 @@ from .analyze import (
 )
 from .extract import cut_clips
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 
 def log(message: str = "") -> None:
@@ -129,7 +129,8 @@ def cmd_cut(args: argparse.Namespace) -> int:
     results = cut_clips(
         args.video, selected, out_dir,
         vertical=args.vertical, vertical_style=args.vertical_style,
-        encoder=encoder, threads=args.threads, on_progress=progress,
+        encoder=encoder, threads=args.threads, speed=args.speed,
+        on_progress=progress,
     )
     ok = sum(1 for r in results if r.ok)
     log("\n完了: {}/{} 本".format(ok, len(results)))
@@ -220,6 +221,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--vertical-style", choices=["blur", "crop"], default="blur",
                    help="縦型の作り方。blur=ぼかし背景で全画面を残す / "
                         "crop=中央を切る (既定 %(default)s)")
+    p.add_argument("--speed", type=float, default=1.0,
+                   help="再生速度 (既定 %(default)s＝等倍)。ショート向けに 1.25 など。"
+                        "声の高さは変わりません")
     p.add_argument("--encoder", choices=["auto", "cpu", "nvenc"], default="auto",
                    help="auto=GPUがあれば使う / cpu=CPUのみ / nvenc=GPUを強制 "
                         "(既定 %(default)s)")

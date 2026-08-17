@@ -1,8 +1,10 @@
 @echo off
 rem ==============================================================
 rem  Drag a video file onto this .bat to cut the top 5 moments
-rem  as 9:16 vertical clips for Shorts. The game screen is never
+rem  as 9:16 vertical clips for Shorts, at 1.25x speed.
+rem  The game screen is never
 rem  cropped; the background is a blurred fill.
+rem  Voice pitch is preserved (atempo, not resampling).
 rem
 rem  Keep this file ASCII-only, and avoid parenthesised if-blocks.
 rem  See 1_*.bat for why.
@@ -27,7 +29,7 @@ echo Preparing (first run only)...
 python -m pip install --quiet --disable-pip-version-check numpy imageio-ffmpeg
 
 echo.
-python -m kirinuki cut "%~1" --top 5 --vertical
+python -m kirinuki cut "%~1" --top 5 --vertical --speed 1.25
 if errorlevel 1 goto :failed
 
 echo.

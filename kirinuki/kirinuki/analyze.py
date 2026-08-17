@@ -96,6 +96,7 @@ class Moment:
     peak_db: float
     excess_db: float      # ベースラインからの超過
     quiet_before_db: float  # 直前5秒の音量（低いほど落差が大きい）
+    attack_db: float      # 直前1.5秒からの跳ね上がり（大きいほど突発的）
     score: float
 
     @property
@@ -177,6 +178,26 @@ def _quiet_before(levels: Sequence[Level], index: int, window: float,
     return float(np.mean([l.db for l in levels[start:index]]))
 
 
+#: 立ち上がりを測る長さ。悲鳴はこの範囲で一気に上がる。
+ATTACK_LOOKBACK = 1.5
+
+
+def _attack(levels: Sequence[Level], index: int, peak_db: float,
+            window: float, lookback: float = ATTACK_LOOKBACK) -> float:
+    """直前 lookback 秒からの跳ね上がり幅。
+
+    悲鳴と「ただの大声」を分けるための指標。音量だけ見ると両者は同じだが、
+    悲鳴は1秒足らずで一気に上がり、大声は数秒かけて上がる。
+    直前の短い区間からの差を見ると、この違いが出る。
+    """
+    span = max(int(lookback / window), 1)
+    start = max(index - span, 0)
+    if start >= index:
+        return 0.0
+    before = float(np.mean([l.db for l in levels[start:index]]))
+    return peak_db - before
+
+
 def find_moments(
     levels: Sequence[Level],
     window: float = 0.5,
@@ -230,17 +251,21 @@ def find_moments(
             continue
         peak = max(l.db for l in levels[first:last + 1])
         quiet = _quiet_before(levels, first, window)
+        attack = _attack(levels, first, peak, window)
 
         excess = peak - base
         # 落差の加点。直前がベースラインより静かなほど効く（上限12dB）。
         contrast = min(max(base - quiet, 0.0), 12.0)
-        # 一瞬のノイズより、続いた反応を上に置く（上限2秒ぶん）。
-        sustain = min(end - start, 2.0)
-        score = excess + contrast * 0.8 + sustain * 2.0
+        # 立ち上がりの速さ。悲鳴と「ただの大声」を分ける一番効く指標なので重く見る。
+        suddenness = min(max(attack, 0.0), 25.0)
+        # 長く続く大きさは反応ではなく喋りっぱなし。3秒を超えたぶんは減点する。
+        overlong = max(end - start - 3.0, 0.0)
+
+        score = excess * 0.6 + suddenness * 1.2 + contrast * 0.4 - overlong * 2.0
 
         moments.append(Moment(
             start=start, end=end, peak_db=peak, excess_db=excess,
-            quiet_before_db=quiet, score=round(score, 2),
+            quiet_before_db=quiet, attack_db=attack, score=round(score, 2),
         ))
     return moments
 

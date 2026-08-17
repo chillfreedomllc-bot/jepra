@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from . import ffmpeg
 from .analyze import Clip
@@ -34,6 +34,30 @@ class CutResult:
     clip: Clip
     ok: bool
     error: str = ""
+
+
+def _speed_filters(speed: float) -> Tuple[str, str]:
+    """再生速度を変えるフィルタ (映像, 音声) を返す。等倍なら空。
+
+    音は atempo で伸縮する。単純にサンプルレートを変えると声の高さが上がって
+    しまうため。atempo は 0.5〜2.0 の範囲でないと受け付けないので、
+    外れる場合は連鎖させる。
+    """
+    if abs(speed - 1.0) < 1e-6:
+        return "", ""
+    video = "setpts=PTS/{:.6f}".format(speed)
+
+    factors = []
+    remaining = speed
+    while remaining > 2.0:
+        factors.append(2.0)
+        remaining /= 2.0
+    while remaining < 0.5:
+        factors.append(0.5)
+        remaining /= 0.5
+    factors.append(remaining)
+    audio = ",".join("atempo={:.6f}".format(f) for f in factors)
+    return video, audio
 
 
 def _vertical_filter(style: str) -> str:
@@ -67,6 +91,7 @@ def cut_clip(
     crf: int = 20,
     encoder: str = "libx264",
     threads: int = 0,
+    speed: float = 1.0,
 ) -> CutResult:
     """1区間を切り出す。
 
@@ -78,17 +103,32 @@ def cut_clip(
     args = ["-v", "error", "-y"]
     if threads:
         args += ["-threads", str(threads)]
+    # -ss と -t は必ず -i より前に置く。-i の後ろに書くと -t が「出力の長さ」に
+    # なってしまい、速度を変えたときに元素材を余計に読んでしまう
+    # （1.25倍なら 13秒の出力を作るために 16.25秒ぶん読む）。
     args += [
         "-ss", "{:.3f}".format(clip.start),
-        "-i", source,
         "-t", "{:.3f}".format(clip.duration),
+        "-i", source,
     ]
+    speed_video, speed_audio = _speed_filters(speed)
+
     if vertical:
         filter_text = _vertical_filter(vertical_style)
         if vertical_style == "crop":
+            if speed_video:
+                filter_text += "," + speed_video
             args += ["-vf", filter_text]
         else:
+            # blur 版は filter_complex なので、最後の出力に速度変更を継ぎ足す。
+            if speed_video:
+                filter_text += "," + speed_video
             args += ["-filter_complex", filter_text]
+    elif speed_video:
+        args += ["-vf", speed_video]
+
+    if speed_audio:
+        args += ["-af", speed_audio]
     args += _encoder_args(encoder, crf) + [
         "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "160k",
@@ -115,6 +155,7 @@ def cut_clips(
     vertical_style: str = "blur",
     encoder: str = "libx264",
     threads: int = 0,
+    speed: float = 1.0,
     on_progress=None,
 ) -> List[CutResult]:
     """複数区間をまとめて切り出す。1本失敗しても残りは続ける。"""
@@ -126,7 +167,7 @@ def cut_clips(
         path = os.path.join(out_dir, name)
         result = cut_clip(source, clip, path, vertical=vertical,
                           vertical_style=vertical_style, encoder=encoder,
-                          threads=threads)
+                          threads=threads, speed=speed)
         results.append(result)
         if on_progress:
             on_progress(index, len(clips), result)

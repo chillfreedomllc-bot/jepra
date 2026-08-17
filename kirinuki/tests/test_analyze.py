@@ -169,7 +169,7 @@ class TestBuildClips(unittest.TestCase):
     def moment(self, start, end, score=20.0):
         from kirinuki.analyze import Moment
         return Moment(start=start, end=end, peak_db=-6.0, excess_db=14.0,
-                      quiet_before_db=-50.0, score=score)
+                      quiet_before_db=-50.0, attack_db=17.0, score=score)
 
     def test_adds_pre_roll_and_post_roll(self):
         clip = build_clips([self.moment(60.0, 62.0)], pre_roll=8.0, post_roll=3.0)[0]
@@ -222,3 +222,50 @@ class TestTimestamps(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestScreamVsLoudTalking(unittest.TestCase):
+    """「悲鳴」と「ただの大声」を分けられること。
+
+    実素材で外れた候補は全て「喋ってはいるが大声なだけ」だった。音量だけ見ると
+    両者は同じなので、立ち上がりの速さ（直前1.5秒からの跳ね上がり）で分ける。
+    悲鳴は1秒足らずで上がり、大声は数秒かけて上がる。
+    """
+
+    def scream(self):
+        # 喋り → 一瞬静か → いきなり大音量 → 戻る
+        return pcm_from_db([(60.0, -23.0), (1.0, -30.0), (1.5, -6.0), (40.0, -23.0)])
+
+    def loud_talking(self):
+        # 喋り → じわじわ上がる → 大きいまま続く → 戻る
+        return pcm_from_db([
+            (60.0, -23.0), (1.5, -19.0), (1.5, -14.0), (1.5, -10.0),
+            (7.0, -8.0), (30.0, -23.0),
+        ])
+
+    def top_score(self, pcm):
+        moments = find_moments(levels_from_pcm(pcm))
+        self.assertTrue(moments, "反応が検出されていない")
+        return max(m.score for m in moments)
+
+    def test_both_are_detected(self):
+        # どちらも「普段より大きい」ので検出自体はされる。問題は順位。
+        self.assertTrue(find_moments(levels_from_pcm(self.scream())))
+        self.assertTrue(find_moments(levels_from_pcm(self.loud_talking())))
+
+    def test_scream_outranks_loud_talking(self):
+        self.assertGreater(self.top_score(self.scream()),
+                           self.top_score(self.loud_talking()))
+
+    def test_attack_is_larger_for_the_scream(self):
+        scream = max(find_moments(levels_from_pcm(self.scream())),
+                     key=lambda m: m.score)
+        talking = max(find_moments(levels_from_pcm(self.loud_talking())),
+                      key=lambda m: m.score)
+        self.assertGreater(scream.attack_db, talking.attack_db)
+
+    def test_sustained_loudness_is_penalised(self):
+        # 3秒を超えて大きいままの区間は、反応ではなく喋りっぱなし。
+        short = pcm_from_db([(60.0, -23.0), (1.0, -30.0), (1.5, -6.0), (40.0, -23.0)])
+        long = pcm_from_db([(60.0, -23.0), (1.0, -30.0), (9.0, -6.0), (40.0, -23.0)])
+        self.assertGreater(self.top_score(short), self.top_score(long))
